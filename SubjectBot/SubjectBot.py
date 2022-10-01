@@ -5,7 +5,8 @@ from discord.ext import commands, tasks
 from itertools import cycle
 from time import gmtime, localtime, strftime, ctime
 from random import randint as randint
-TOKEN = 'NzQzMzc2ODI1MDkwMzEwMjg2.XzTxng.dngnuHVZOhkOpeJtN2pK6gaBoIk'
+#I removed my bot token for obvious reasons
+TOKEN = ******
 prefix = '$'
 client = commands.Bot(command_prefix=prefix)
 reminderOn = 1
