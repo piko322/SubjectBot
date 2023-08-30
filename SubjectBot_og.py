@@ -4,7 +4,8 @@ import math, discord, asyncio
 from discord.ext import commands, tasks
 from itertools import cycle
 from time import gmtime, localtime, strftime, ctime
-from random import randint as randint
+from random import randint
+
 #I removed my bot token for obvious reasons
 TOKEN = ******
 prefix = '$'
@@ -13,22 +14,35 @@ reminderOn = 1
 internalreminderOn = True
 reminder_states = ['','enabled.','disabled.']
 
-#Make changes to these variables
-linkDict = {'Indo Studies':'https://meet.google.com/txh-kxsw-zbu','Indonesian B':'https://meet.google.com/txh-kxsw-zbu', 'Civics':'https://meet.google.com/oyy-pxjx-mnq', 'Indonesian A':'https://meet.google.com/oyy-pxjx-mnq', 'ESS':'https://meet.google.com/yyx-ymzm-bda', 'Physics':'https://meet.google.com/eja-kcsa-hoo?pli=1&authuser=1', 'Chemistry':'https://meet.google.com/eor-oopz-ynm', 'Maths AI SL':'', 'English LL':'https://meet.google.com/tar-ejth-cfg', 'Business Management':'https://meet.google.com/uws-vyjp-ubz', 'Economics':'https://meet.google.com/dqa-osie-vwt', 'Computer Science': 'https://meet.google.com/mkg-oimj-qvc', 'Chinese B': 'https://meet.google.com/pdw-otdq-zju?authuser=0', 'Maths AA SL':'https://meet.google.com/bru-irpc-rdx','TOK':'https://meet.google.com/tar-ejth-cfg','Maths AA HL':'https://meet.google.com/pzm-zcvz-cuz','PE':'https://g.co/meet/swamshsphe','UGC':'https://meet.google.com/dhp-xwak-zjk','Assembly':'https://meet.google.com/sdq-zmfu-goh'}
+# Configuration variables that affect how the bot behaves
+# Dictionary containing the course names as keys and the google meet links as values
+linkDict = {''}
+
+# The minimum delay (in seconds) between successive command calls from users 
 reminderDelay = 1
+
+# The channel ID you want the messages to be sent to
 announcementChannel = 473402989676068906
+
+# How long a class period lasts (in seconds)
 periodDuration = 40*60
+
+# How long breaktime lasts (in seconds)
 breakDuration = 10*60
-#Schedule
+
+# The daily schedule, formatted as '#Periods + Course name' 
 Monday = ['2MATH','2TOK','2LANGB','2SCIENCE','1CIVICS']
 Tuesday = ['2LANGA','2SCIENCE2','2ECONVA','1PE','1TOK','1CORE']
 Wednesday = ['2SCIENCE2','2LANGB','2ECONVA','1UGC','2LANGA']
 Thursday = ['2MATH','2LANGA','2LANGB','2SCIENCE','1ASSEMBLY']
 Friday = ['2MATH','2SCIENCE','2SCIENCE2','2ECONVA','1RELIGION']
+
+# Stores the weekly schedule as a nested list
 Timetable = [Monday,Tuesday,Wednesday,Thursday,Friday]
 Timeslots = ['0740', '0820','0910','0950','1040','1120','1300','1340','1420','1500']
 Weekdays = {'Mon':0,'Tue':1,'Wed':2,'Thu':3,'Fri':4}
-#Duration of each period in seconds
+
+
 MATH = ['Maths AA HL','Maths AA SL','Maths AI SL']
 SCIENCE = ['Physics','Biology','ESS']
 SCIENCE2 = ['Chemistry','Computer Science','Business Management']
@@ -42,6 +56,7 @@ RELIGION = ['G12A','G12B']
 PE = ['PE']
 CORE = ['Core']
 UGC = ['UGC']
+
 allSubjects = [MATH,SCIENCE,SCIENCE2,ECONVA,LANGA,LANGB,CIVICS,TOK]
 subjectDict = {'MATH':MATH,'SCIENCE':SCIENCE,'SCIENCE2':SCIENCE2,'ECONVA':ECONVA,'LANGA':LANGA,'LANGB':LANGB,'CIVICS':CIVICS,'TOK':TOK,'ASSEMBLY':ASSEMBLY,'RELIGION':RELIGION,'PE':PE,'CORE':CORE,'UGC':UGC}
 messageCD = False
@@ -68,10 +83,11 @@ def getTime(stringTime):
     minute = stringTime[2:]
     return hour,minute
 
-#Finds the name of the class on the given period
+#Finds the name of the class on the given period and returns it
 def getClass(day,period):
     weekday = Weekdays.get(cDay[:3].capitalize())
     period = int(period)-1
+    # Before breaktime, "snap" to the closest course
     if period <= 5:
         classCode = Timetable[weekday][int(math.ceil((period-1)/2))]
     elif period == 6:
@@ -85,11 +101,12 @@ def getClass(day,period):
         classCode = Timetable[weekday][-1]
     else:
         classCode = "sNoClass"
+    # Skips the first character, which contains the duration of the class
     className = classCode[1:]
     return className
 
 def checkWeekend():
-    if cDay == ("Sat" and "Sun"):
+    if cDay in ["Sat", "Sun"]:
         return True
     else:
         return False
@@ -157,7 +174,7 @@ async def nextClass(ctx):
     timeRefresh()
     #If the command is called for a second time, it'll delete all the previous messages from this command
     if checkWeekend() == True:
-        await ctx.send("We don't have classes during the weekend. Dumba$$.")
+        await ctx.send("We don't have classes during the weekend.")
     else:
         calibration = timeCalibrate()
         hDiff = calibration[1]
@@ -203,90 +220,24 @@ async def nextClass_error(ctx, error):
     else:
         raise error
 
-#Important Commands\
+# Important Commands
 
-#Sends a series of custom discord stickers arranged in a phallic shape for comedy
+#Sends a series of custom stickers in my class discord server arranged in an interesting shape
 @commands.cooldown(1, 1, commands.BucketType.user)
 @client.command(aliases=['k'])
 async def kimmy(ctx):
     msgd = await ctx.send(".                         <:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                    <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n                   <:williepickle:818642560527630349><:williepickle:818642560527630349><:williepickle:818642560527630349>\n<:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>                    <:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>\n<:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>                    <:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>\n<:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>                   <:kimmy:818285699861184523><:kimmy:818285699861184523><:kimmy:818285699861184523>")
-#Adds a cooldown for the command so people don't spam this too often, because
-#I know they definitely will otherwise
-@nextClass.error
-async def kimmy_error(ctx, error):
-    msgcycle = cycle(["chill dude","i'm tired","my balls itch"])
-    if isinstance(error, commands.CommandOnCooldown):
-        await asyncio.sleep(1.5)
-        await ctx.channel.delete_messages([msgd,ctx.message])
-    else:
-        raise error
-#Calmly tells someone to go away
-@client.command(aliases=['fo'],hidden=True)
-async def fuckoff(ctx):
-    print("Executing FO....")
-    await asyncio.sleep(30)
-    await ctx.send("F**k off")
-sauce_cycle = 0
-prevsauce = int()
-#Calmly conveys anger to someone
-@client.command(aliases=['f','fu'],hidden=True)
-async def fuckyou(ctx,count=1,duration=10,member=None):
-    deleteList = []
-    if count > 6:
-        count = 6
-    if member == None:
-        for count in range (0,count):
-            msg = await ctx.send("fuck you")
-            if count > 0:
-                deleteList.append(msg)
-        await asyncio.sleep(duration)
-        await ctx.channel.delete_messages(deleteList)
-    else:
-        #Specifies someone to specifically fuck
-        Go = False
-        IsMention = False
-        person = discord.utils.get(ctx.guild.members,name=member)
-        if person != None:
-            Go = True
-        else:
-            person = discord.utils.get(ctx.guild.members,nick=member)
-            if person != None:
-                Go = True
-            else:
-                if member.startswith("<@"):
-                    IsMention = True
-                    Go = True
-                else:
-                    await ctx.send("{Member} is not in {server}!".format(Member=member,server=ctx.guild.name))
-                    Go = False
-        if Go == True:
-            for count in range (1,count):
-                if IsMention == True:
-                    msg = await ctx.send("{} fuck you".format(member))
-                else:
-                    msg = await ctx.send("{} fuck you".format(person.mention))
 
-            #Deletes the message to maintain secrecy and anonimity
-            await asyncio.sleep(duration)
-            await ctx.channel.delete_messages(deleteList)
-            pissed = False
 #Changes the delay (in seconds) before sending the reminder message to the channel
 @client.command(aliases=['rcd','delay'],brief='Changes the delay to <Input> seconds.')
 async def Delay(ctx,newDelay):
-    pissed = False
+
     try:
         int(newDelay)
     except ValueError:
         await ctx.send("Please enter an integer number of seconds.")
     if int(newDelay) > 600:
-        if pissed == True:
-            #Gives the bot somewhat of an emotion by allowing it to be angry
-            #If the user keeps inputting something wrong
-            await ctx.send("That was not a question. Your delay is too long. Keep it below 10 minutes.")
-            pissed = not pissed
-        else:
-            await ctx.send("Are you sure you want the reminder to come "+str(newDelay)+" seconds before class?")
-            pissed = not pissed
+        await ctx.send("Are you sure you want the reminder to come "+str(newDelay)+" seconds before class?")
     else:
         global reminderDelay
         reminderDelay = newDelay
@@ -327,7 +278,7 @@ async def classNow(ctx):
         currentClasses=subjectDict.get((getClass(str(cDay),slotno)))
         #Sleeps until <reminderDelay> seconds before class starts
         messagesSent = 0
-        msg1 = "Current classes are ***{}***\n".format(currentClasses)
+        msg1 = f"Current classes are ***{currentClasses}***\n"
         msg2 = ""
         for classes in currentClasses:
             specifiedRole = discord.utils.get(Guild.roles,name=classes)
@@ -368,13 +319,6 @@ async def missingLinks(ctx):
                 missingLinkList.append(subjects)
     await ctx.send("The missing subjects links are {}".format(", ".join(missingLinkList)))
 
-@client.command(aliases=['y','Y','Yes'],hidden=True)
-async def yes(ctx):
-    global pissed
-    if pissed == True:
-        await ctx.send("That was not a question. Your delay is too long. Keep it below 10 minutes.")
-        pissed = not pissed
-
 @client.command(aliases=['cd','CD','cD','Cd'])
 async def change_cd(ctx,cd):
     global nc_CD
@@ -386,7 +330,7 @@ async def change_cd(ctx,cd):
 
 async def change_cd_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        msg = await ctx.send('You forgot to mention how many seconds you want to change it to, dumba$$')
+        msg = await ctx.send('Please enter the number of seconds to change the cooldown to.')
         await asyncio.sleep(0.5)
         await ctx.channel.delete_messages([msg,ctx.message])
     else:
