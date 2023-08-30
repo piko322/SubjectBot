@@ -63,7 +63,6 @@ messageCD = False
 nc_CD = 1
 
 deleteList = []
-pissed = False
 
 #Updates the global time variables
 def timeRefresh():
@@ -335,10 +334,11 @@ async def change_cd_error(ctx, error):
         await ctx.channel.delete_messages([msg,ctx.message])
     else:
         raise error
+    
 #Calmly tells someone to shut up
 @client.command()
 async def s(ctx):
-    msg = await ctx.send("STFU <@!266508133474631680>")
+    msg = await ctx.send("Shut up <@!266508133474631680>")
     await ctx.channel.delete_messages([ctx.message])
 
 
