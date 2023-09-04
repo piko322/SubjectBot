@@ -12,7 +12,7 @@ class CourseNode:
     """Node representing a class "block" in a weekly schedule.
     
     Attributes:
-        node_title: The title of the course, which is a concatenation of the subject course and type
+        name: The title of the course, which is a concatenation of the subject course and type
         day: The day of the week the course is on
         start_time: The start time of the course
         end_time: The end time of the course
@@ -23,9 +23,9 @@ class CourseNode:
         reminder: The number of minutes before the start time of the course to send a reminder  (default 0)
     """
     
-    def __init__(self, node_title:str=None, day:str=None,  start_time=-1, end_time=-1, \
+    def __init__(self, name:str=None, day:str=None,  start_time=-1, end_time=-1, \
                     location:str=None, prev_node=None, next_node=None, reminder:int=0):
-        self.node_title = node_title
+        self.name = name
         if start_time == -1 and end_time == -1:
             self.start_time = -1
             self.end_time = -1
@@ -43,7 +43,7 @@ class CourseNode:
         self.day = day
     
     def __str__(self):
-        return self.node_title
+        return self.name
     
     def __repr__(self):
         dayDict = {"M":"Monday", "Tu":"Tuesday", "W":"Wednesday", "Th":"Thursday", "F":"Friday", "Sa":"Saturday", "Su":"Sunday"}
@@ -51,24 +51,24 @@ class CourseNode:
             return f"Sentinel Node on {dayDict[self.day]}"
         start_time = self.start_time.strftime("%I:%M%p")
         end_time = self.end_time.strftime("%I:%M%p")
-        return f"{self.node_title} from {start_time} to {end_time} at {self.location} on {dayDict[self.day]}, lasting {self.duration} minutes"
+        return f"{self.name} from {start_time} to {end_time} at {self.location} on {dayDict[self.day]}, lasting {self.duration} minutes"
     
     # Getter and Setter methods for each attribute
-    def get_node_title(self):
-        return self.node_title
+    def get_name(self):
+        return self.name
     
-    def set_node_title(self, node_title):
-        self.node_title = node_title
+    def set_name(self, name):
+        self.name = name
         
     def get_start_time(self):
-        return self.start_time
+        return self.start_time.time()
     
     def set_start_time(self, start_time:datetime):
         self.start_time = start_time
         self.duration = (self.end_time - start_time).total_seconds() / 60
 
     def get_end_time(self):
-        return self.end_time
+        return self.end_time.time()
     
     def set_end_time(self, end_time:datetime):
         self.end_time = end_time
@@ -111,7 +111,7 @@ class CourseNode:
             raise ValueError("Cannot compare two CourseNode objects with different days")
         if self.start_time == other.start_time:
             if self.end_time == other.end_time:
-                return self.node_title > other.node_title
+                return self.name > other.name
             return self.end_time > other.end_time
         return self.start_time > other.start_time
     
@@ -120,14 +120,14 @@ class CourseNode:
             raise ValueError("Cannot compare two CourseNode objects with different days")
         if self.start_time == other.start_time:
             if self.end_time == other.end_time:
-                return self.node_title < other.node_title
+                return self.name < other.name
             return self.end_time < other.end_time
         return self.start_time < other.start_time
     # If two nodes have the same day, start time, end time, and node title, they are the same node
     def __eq__(self, other): 
         if self.day == other.day:
             if (self.start_time == other.start_time) and (self.end_time == other.end_time):
-                if self.node_title == other.node_title:
+                if self.name == other.name:
                     return True
         return False
 
@@ -138,6 +138,7 @@ class ScheduleIterator:
     def __next__(self):
         # If the current node is the tail node, stop iteration
         if self.curr_node.get_start_time() == -1 or self.curr_node.get_end_time() == -1:
+            
             raise StopIteration
         else:
             curr_node = self.curr_node
@@ -193,14 +194,19 @@ class DaySchedule:
         self.size += 1
         self.length += new_node.duration
     
+    def get_first_start_time(self):
+        return self.head.next_node.get_start_time()
+    
+    def get_last_end_time(self):
+        return self.tail.prev_node.get_end_time()
+    
     def __repr__(self):
         curr_node = self.head.next_node
-        schedule = f"{self.day} Schedule: "
+        schedule = f"{self.day} Schedule: ["
         while curr_node != self.tail:
-            schedule += curr_node.get_node_title() + ", "
+            schedule += curr_node.get_name() + " | "
             curr_node = curr_node.next_node
-        return schedule[:-2]
-
+        return schedule[:-3] + "]"
     
     
     
