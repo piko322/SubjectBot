@@ -23,14 +23,18 @@ class CourseNode:
         reminder: The number of minutes before the start time of the course to send a reminder  (default 0)
     """
     
-    def __init__(self, node_title:str=None, day:str=None,  start_time:datetime=None, end_time:datetime=None, \
+    def __init__(self, node_title:str=None, day:str=None,  start_time=-1, end_time=-1, \
                     location:str=None, prev_node=None, next_node=None, reminder:int=0):
         self.node_title = node_title
-        # Calculate duration at runtime
-        # Convert start_time and end_time to datetime objects
-        self.start_time = datetime.strptime(start_time, "%I:%M%p")
-        self.end_time = datetime.strptime(end_time, "%I:%M%p")
-        self.duration = int((self.end_time - self.start_time).total_seconds() / 60)
+        if start_time == -1 and end_time == -1:
+            self.start_time = -1
+            self.end_time = -1
+        else:
+            # Calculate duration at runtime
+            # Convert start_time and end_time to datetime objects
+            self.start_time = datetime.strptime(start_time, "%I:%M%p")
+            self.end_time = datetime.strptime(end_time, "%I:%M%p")
+            self.duration = int((self.end_time - self.start_time).total_seconds() / 60)
         # TODO: Use Google Places API to get a google maps link to the location if found, else use the location string
         self.location = location
         self.prev_node = prev_node
@@ -40,6 +44,8 @@ class CourseNode:
     
     def __repr__(self):
         dayDict = {"M":"Monday", "Tu":"Tuesday", "W":"Wednesday", "Th":"Thursday", "F":"Friday", "Sa":"Saturday", "Su":"Sunday"}
+        if self.start_time == -1 or self.end_time == -1:
+            return f"Sentinel Node on {dayDict[self.day]}"
         start_time = self.start_time.strftime("%I:%M%p")
         end_time = self.end_time.strftime("%I:%M%p")
         return f"{self.node_title} from {start_time} to {end_time} at {self.location} on {dayDict[self.day]}, lasting {self.duration} minutes"
@@ -126,15 +132,56 @@ class CourseNode:
 class DaySchedule:
     """Doubly linked list of CourseNode objects representing a schedule for a single day.
     Attributes:
-        day: The day of the week this DaySchedule object represents
         head: The head node of the linked list
         tail: The tail node of the linked list
         size: The number of nodes in the linked list
-        length: The total length of the schedule in x Hours + y Minutes
+        length: The total length of the schedule in minutes
     """
-    def __init__(self, day:str):
+    def __init__(self, day:str=None):
         self.day = day
-        self.head = CourseNode()
-        self.tail = CourseNode()
+        # Set sentinel nodes for head and tail
+        self.head = CourseNode(day=day)
+        self.tail = CourseNode(day=day)
         self.size = -1
-        self.length = -1
+        self.length = 0
+    
+    def insert(self, new_node):
+        if self.size == -1:
+            self.head.next_node = new_node
+            new_node.prev_node = self.head
+            new_node.next_node = self.tail
+            self.tail.prev_node = new_node
+        else:
+            # Iterate through the linked list until curr_node is greater than node
+            curr_node = self.head.next_node
+            while curr_node < new_node:
+                curr_node = curr_node.next_node
+                if curr_node == self.tail:
+                    break
+            if curr_node == self.tail:
+                # Insert node at the end of the linked list
+                # Update the pointers of the new node
+                new_node.prev_node = curr_node.prev_node
+                new_node.next_node = curr_node
+                # Update the pointers of the node before this node
+                curr_node.prev_node.next_node = new_node
+                # Update the pointers of the tail noded 
+                curr_node.prev_node = new_node
+            else:
+                # Update the pointers of the new node
+                new_node.next_node = curr_node
+                new_node.prev_node = curr_node.prev_node
+                # Update the pointers of the node before this node
+                curr_node.prev_node.next_node = new_node
+                # Update the pointers of the node after this node
+                curr_node.prev_node = new_node
+        self.size += 1
+        self.length += new_node.duration
+    
+    def __repr__(self):
+        curr_node = self.head.next_node
+        schedule = f"{self.day} Schedule: "
+        while curr_node != self.tail:
+            schedule += curr_node.get_node_title() + ", "
+            curr_node = curr_node.next_node
+        return schedule[:-2]
