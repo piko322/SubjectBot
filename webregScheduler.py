@@ -42,6 +42,9 @@ class CourseNode:
         self.reminder = reminder
         self.day = day
     
+    def __str__(self):
+        return self.node_title
+    
     def __repr__(self):
         dayDict = {"M":"Monday", "Tu":"Tuesday", "W":"Wednesday", "Th":"Thursday", "F":"Friday", "Sa":"Saturday", "Su":"Sunday"}
         if self.start_time == -1 or self.end_time == -1:
@@ -81,16 +84,16 @@ class CourseNode:
     def set_location(self, location):
         self.location = location
         
-    def get_prev_node(self):
+    def get_prev(self):
         return self.prev_node
     
-    def set_prev_node(self, prev_node):
+    def set_prev(self, prev_node):
         self.prev_node = prev_node
         
-    def get_next_node(self):
+    def get_next(self):
         return self.next_node
     
-    def set_next_node(self, next_node):
+    def set_next(self, next_node):
         self.next_node = next_node
         
     def get_reminder(self):
@@ -128,6 +131,21 @@ class CourseNode:
                     return True
         return False
 
+class ScheduleIterator:
+    def __init__(self, head):
+        self.curr_node = head.next_node
+    
+    def __next__(self):
+        # If the current node is the tail node, stop iteration
+        if self.curr_node.get_start_time() == -1 or self.curr_node.get_end_time() == -1:
+            raise StopIteration
+        else:
+            curr_node = self.curr_node
+            self.curr_node = self.curr_node.get_next()
+            return curr_node
+        
+    def __iter__(self):
+        return self
 
 class DaySchedule:
     """Doubly linked list of CourseNode objects representing a schedule for a single day.
@@ -138,43 +156,40 @@ class DaySchedule:
         length: The total length of the schedule in minutes
     """
     def __init__(self, day:str=None):
+        if day not in ["M", "Tu", "W", "Th", "F", "Sa", "Su"]:
+            raise ValueError("Invalid day of the week: must be one of M, Tu, W, Th, F, Sa, Su")
         self.day = day
         # Set sentinel nodes for head and tail
         self.head = CourseNode(day=day)
         self.tail = CourseNode(day=day)
-        self.size = -1
+        self.size = 0
         self.length = 0
     
-    def insert(self, new_node):
-        if self.size == -1:
+    def __iter__(self):
+        return ScheduleIterator(self.head)
+    
+    def insert(self, new_node:CourseNode):
+        if self.size == 0:
             self.head.next_node = new_node
             new_node.prev_node = self.head
             new_node.next_node = self.tail
             self.tail.prev_node = new_node
         else:
-            # Iterate through the linked list until curr_node is greater than node
             curr_node = self.head.next_node
-            while curr_node < new_node:
+            # Iterate through the linked list until a class with a later start time is found
+            while new_node > curr_node:
                 curr_node = curr_node.next_node
+                # If the end of the linked list is reached, insert the node at the end
                 if curr_node == self.tail:
                     break
-            if curr_node == self.tail:
-                # Insert node at the end of the linked list
-                # Update the pointers of the new node
-                new_node.prev_node = curr_node.prev_node
-                new_node.next_node = curr_node
-                # Update the pointers of the node before this node
-                curr_node.prev_node.next_node = new_node
-                # Update the pointers of the tail noded 
-                curr_node.prev_node = new_node
-            else:
-                # Update the pointers of the new node
-                new_node.next_node = curr_node
-                new_node.prev_node = curr_node.prev_node
-                # Update the pointers of the node before this node
-                curr_node.prev_node.next_node = new_node
-                # Update the pointers of the node after this node
-                curr_node.prev_node = new_node
+            # Update the new node
+            new_node.next_node = curr_node
+            new_node.prev_node = curr_node.prev_node
+            # Update the node before the new node
+            curr_node.prev_node.next_node = new_node
+            # Update the node after the new node
+            curr_node.prev_node = new_node
+            
         self.size += 1
         self.length += new_node.duration
     
@@ -185,3 +200,7 @@ class DaySchedule:
             schedule += curr_node.get_node_title() + ", "
             curr_node = curr_node.next_node
         return schedule[:-2]
+
+    
+    
+    
